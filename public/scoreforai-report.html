@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSecCheck Security Report — scoreforai.com</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--green:#00FF41;--green2:#00cc33;--red:#ff4444;--orange:#ff9800;--yellow:#ffd600;--blue:#4fc3f7;--gray:#888;--gray2:#555;--text:#e0e0e0;--text2:#aaa;--border:#2a2a2a;--critical:#ff1744;--high:#ff5252;--medium:#ff9800;--low:#ffd600;--info:#4fc3f7;--pass:#00FF41}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.6;min-height:100vh}
+a{color:var(--green)}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+.report-header{background:linear-gradient(135deg,#0a0a0a 0%,#0f1a0f 50%,#0a0a0a 100%);border-bottom:1px solid var(--border);padding:40px 0}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:48px;height:48px;border:2px solid var(--green);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,255,65,.05)}
+.brand h1{font-size:24px;font-weight:700;color:#fff;letter-spacing:-.5px}
+.brand h1 span{color:var(--green)}
+.report-badge{background:linear-gradient(135deg,var(--green),var(--green2));color:#000;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.report-meta{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.meta-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px}
+.meta-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:4px}
+.meta-value{font-size:15px;color:#fff;font-weight:600;word-break:break-all}
+.meta-value.domain{color:var(--green)}
+.report-nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.nav-inner{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.nav-inner a{color:var(--text2);text-decoration:none;font-size:13px;padding:6px 14px;border-radius:6px;white-space:nowrap;transition:.2s}
+.nav-inner a:hover{color:#fff;background:var(--bg3)}
+section{padding:48px 0;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none}
+.section-header{margin-bottom:32px}
+.section-num{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--green);font-weight:700;margin-bottom:6px}
+.section-title{font-size:28px;font-weight:700;color:#fff}
+.section-subtitle{color:var(--text2);margin-top:6px;font-size:15px}
+.score-area{display:flex;align-items:center;gap:60px;flex-wrap:wrap;justify-content:center}
+.gauge-wrap{position:relative;width:260px;height:260px;flex-shrink:0}
+.gauge-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge-bg{fill:none;stroke:var(--bg4);stroke-width:18}
+.gauge-fill{fill:none;stroke:#00FF41;stroke-width:18;stroke-linecap:round;stroke-dasharray:691.15;stroke-dashoffset:41.46899999999994}
+.gauge-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.gauge-score{font-size:72px;font-weight:800;color:#fff;line-height:1}
+.gauge-max{font-size:18px;color:var(--gray);margin-top:2px}
+.gauge-grade{display:inline-block;margin-top:8px;background:#00FF41;color:#000;font-size:20px;font-weight:800;padding:4px 18px;border-radius:6px;letter-spacing:2px}
+.score-summary{flex:1;min-width:280px}
+.score-summary h3{font-size:20px;color:#fff;margin-bottom:12px}
+.score-summary p{color:var(--text2);margin-bottom:16px;font-size:15px;line-height:1.7}
+.stat-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:20px}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;flex:1;min-width:100px;text-align:center}
+.stat-num{font-size:28px;font-weight:800}
+.stat-num.pass{color:var(--pass)}
+.stat-num.fail{color:var(--red)}
+.stat-num.warn{color:var(--orange)}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-top:4px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.cat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;transition:.2s}
+.cat-card:hover{border-color:var(--gray2)}
+.cat-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cat-card-title{font-size:16px;font-weight:700;color:#fff}
+.cat-score{font-size:14px;font-weight:700;padding:4px 12px;border-radius:6px}
+.cat-score.good{background:rgba(0,255,65,.1);color:var(--green)}
+.cat-score.bad{background:rgba(255,68,68,.1);color:var(--red)}
+.cat-score.mid{background:rgba(255,152,0,.1);color:var(--orange)}
+.cat-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.cat-bar-fill{height:100%;border-radius:3px}
+.cat-checks{display:flex;flex-direction:column;gap:8px}
+.cat-check{display:flex;align-items:center;gap:10px;font-size:13px}
+.cat-check .icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;font-weight:700}
+.cat-check .icon.pass{background:rgba(0,255,65,.15);color:var(--green)}
+.cat-check .icon.fail{background:rgba(255,68,68,.15);color:var(--red)}
+.cat-check .icon.warn{background:rgba(255,152,0,.15);color:var(--orange)}
+.finding{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.finding-header{padding:20px 24px;display:flex;align-items:center;gap:16px;cursor:pointer;flex-wrap:wrap}
+.severity-badge{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;flex-shrink:0}
+.severity-badge.critical{background:rgba(255,23,68,.15);color:var(--critical);border:1px solid rgba(255,23,68,.3)}
+.severity-badge.high{background:rgba(255,82,82,.15);color:var(--high);border:1px solid rgba(255,82,82,.3)}
+.severity-badge.medium{background:rgba(255,152,0,.15);color:var(--medium);border:1px solid rgba(255,152,0,.3)}
+.severity-badge.low{background:rgba(255,214,0,.15);color:var(--low);border:1px solid rgba(255,214,0,.3)}
+.severity-badge.pass-badge{background:rgba(0,255,65,.1);color:var(--pass);border:1px solid rgba(0,255,65,.3)}
+.finding-name{font-size:16px;font-weight:700;color:#fff;flex:1}
+.finding-status{font-size:13px;font-weight:700;padding:4px 12px;border-radius:6px}
+.finding-status.pass{background:rgba(0,255,65,.1);color:var(--green)}
+.finding-status.fail{background:rgba(255,68,68,.1);color:var(--red)}
+.finding-status.warn{background:rgba(255,152,0,.1);color:var(--orange)}
+.finding-body{padding:0 24px 24px;display:none}
+.finding.open .finding-body{display:block}
+.finding-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.finding-grid{grid-template-columns:1fr}}
+.finding-section{margin-bottom:16px}
+.finding-section h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:8px;font-weight:700}
+.finding-section p,.finding-section li{color:var(--text2);font-size:14px;line-height:1.7}
+.finding-section ul{padding-left:18px}
+code{background:var(--bg4);color:var(--green);padding:2px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono','Fira Code',monospace}
+pre{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:8px 0;font-size:13px;line-height:1.6;color:var(--green);font-family:'SF Mono','Fira Code',monospace}
+.chevron{color:var(--gray);transition:.2s;font-size:18px;flex-shrink:0}
+.finding.open .chevron{transform:rotate(90deg)}
+.action-table{width:100%;border-collapse:collapse}
+.action-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);padding:12px 16px;border-bottom:1px solid var(--border)}
+.action-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+.action-table tr:hover td{background:var(--bg3)}
+.priority-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#000}
+.effort-tag{font-size:12px;padding:3px 10px;border-radius:4px;background:var(--bg4);color:var(--text2)}
+.cta-box{background:linear-gradient(135deg,rgba(0,255,65,.05),rgba(0,255,65,.02));border:1px solid rgba(0,255,65,.2);border-radius:12px;padding:32px;text-align:center;margin-top:32px}
+.cta-box h3{color:#fff;font-size:20px;margin-bottom:8px}
+.cta-box p{color:var(--text2);margin-bottom:20px}
+.cta-btn{display:inline-block;background:var(--green);color:#000;padding:12px 32px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px;transition:.2s}
+.cta-btn:hover{background:#00e639;transform:translateY(-1px)}
+.report-footer{background:var(--bg2);border-top:1px solid var(--border);padding:32px 0;text-align:center}
+.footer-brand{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.footer-brand span{color:var(--green)}
+.footer-text{color:var(--gray);font-size:13px}
+.footer-disclaimer{color:var(--gray2);font-size:12px;margin-top:16px;max-width:700px;margin-left:auto;margin-right:auto;line-height:1.6}
+.watermark{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:11px;color:var(--gray);z-index:50;opacity:.7}
+.watermark span{color:var(--green)}
+@media print{body{background:#fff;color:#222}.report-nav,.watermark,.cta-box{display:none}.finding-body{display:block!important}pre{background:#f5f5f5;color:#222;border-color:#ddd}.section-title,.finding-name{color:#111}}
+</style>
+</head>
+<body>
+
+<header class="report-header">
+<div class="container">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div>
+        <h1>Web<span>Sec</span>Check</h1>
+        <div style="font-size:12px;color:var(--gray);letter-spacing:1px">SECURITY ASSESSMENT REPORT</div>
+      </div>
+    </div>
+    <div class="report-badge">Full Security Audit</div>
+  </div>
+  <div class="report-meta">
+    <div class="meta-item">
+      <div class="meta-label">Target Domain</div>
+      <div class="meta-value domain">scoreforai.com</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Scan Date</div>
+      <div class="meta-value">February 26, 2026 — 21:36 UTC</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Report ID</div>
+      <div class="meta-value" style="font-family:monospace;font-size:13px">WSC-2026-0226-24EB</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Overall Grade</div>
+      <div class="meta-value" style="color:#00FF41;font-size:22px">A — 94 / 100</div>
+    </div>
+  </div>
+</div>
+</header>
+
+<nav class="report-nav">
+<div class="nav-inner container">
+  <a href="#executive-summary">Executive Summary</a>
+  <a href="#score">Overall Score</a>
+  <a href="#categories">Categories</a>
+  <a href="#findings">Detailed Findings</a>
+  <a href="#action-plan">Action Plan</a>
+</div>
+</nav>
+
+<main class="container">
+
+<section id="executive-summary">
+<div class="section-header">
+  <div class="section-num">01 — Executive Summary</div>
+  <h2 class="section-title">Security Posture Overview</h2>
+</div>
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;border-left:4px solid #00FF41">
+  <p style="font-size:16px;color:#fff;font-weight:600;margin-bottom:12px">scoreforai.com demonstrates an excellent security posture with most controls properly configured.</p>
+  <p style="color:var(--text2);font-size:15px;line-height:1.8">Our scan performed <strong style="color:#fff">18 security checks</strong> across multiple categories. Results: <strong style="color:#00FF41">17 passed</strong>, <strong style="color:#ff9800">0 warnings</strong>, and <strong style="color:#ff4444">1 failed</strong>. Scan completed in 0.46s.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:20px">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div style="font-size:13px;color:var(--gray);margin-bottom:6px">Checks Performed</div>
+    <div style="font-size:32px;font-weight:800;color:#fff">18</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div style="font-size:13px;color:var(--gray);margin-bottom:6px">Critical Issues</div>
+    <div style="font-size:32px;font-weight:800;color:var(--red)">1</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div style="font-size:13px;color:var(--gray);margin-bottom:6px">Risk Exposure</div>
+    <div style="font-size:32px;font-weight:800;color:#00FF41">LOW</div>
+  </div>
+</div>
+</section>
+
+<section id="score">
+<div class="section-header">
+  <div class="section-num">02 — Overall Score</div>
+  <h2 class="section-title">Security Score</h2>
+</div>
+<div class="score-area">
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" viewBox="0 0 240 240">
+      <circle class="gauge-bg" cx="120" cy="120" r="110"/>
+      <circle class="gauge-fill" cx="120" cy="120" r="110"/>
+    </svg>
+    <div class="gauge-center">
+      <div class="gauge-score">94</div>
+      <div class="gauge-max">out of 100</div>
+      <div class="gauge-grade">A</div>
+    </div>
+  </div>
+  <div class="score-summary">
+    <h3>Score Breakdown</h3>
+    <p>A score of 94 places your site in the <strong style="color:#00FF41">Grade A</strong> tier.</p>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num pass">17</div><div class="stat-label">Passed</div></div>
+      <div class="stat-box"><div class="stat-num fail">1</div><div class="stat-label">Failed</div></div>
+      <div class="stat-box"><div class="stat-num warn">0</div><div class="stat-label">Warnings</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="categories">
+<div class="section-header">
+  <div class="section-num">03 — Category Breakdown</div>
+  <h2 class="section-title">Results by Category</h2>
+</div>
+<div class="cat-grid">
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">🔒 SSL/TLS</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>SSL Certificate Validity — SSL certificate is valid and trusted.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>SSL Certificate Expiration — Certificate valid for 83 more days.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>TLS Protocol Version — Using TLSv1.3 (recommended).</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>HTTP Strict Transport Security — HSTS is enabled.</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">🛡️ HTTP Headers</div>
+      <div class="cat-score good">80%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:80%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon fail">✗</div><span>Content Security Policy — CSP header is missing. Add it to prevent XSS and data injection attacks.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>X-Frame-Options — X-Frame-Options is set.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>X-Content-Type-Options — X-Content-Type-Options is set.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>Referrer-Policy — Referrer-Policy is configured.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>Permissions-Policy — Permissions-Policy is configured.</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">📧 DNS</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>SPF Record — SPF record is configured.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>DMARC Record — DMARC record is configured.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>DKIM Record — DKIM record found (selector: resend).</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">⚙️ Server Exposure</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>Server Version Disclosure — Server header present but no version number disclosed.</span></div>
+<div class="cat-check"><div class="icon pass">✓</div><span>X-Powered-By Leak — X-Powered-By header is not exposed.</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">🍪 Cookies</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>Cookie Security — No cookies detected on the initial response.</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">📋 CMS</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>CMS Version Exposure — No common CMS (WordPress/Drupal/Joomla) version exposure detected.</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">📋 Content Security</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>Mixed Content — No mixed content detected — all resources appear to load over HTTPS.</span></div>
+</div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-card-header">
+      <div class="cat-card-title">↗️ Redirects</div>
+      <div class="cat-score good">100%</div>
+    </div>
+    <div class="cat-bar"><div class="cat-bar-fill" style="width:100%;background:#00FF41"></div></div>
+    <div class="cat-checks"><div class="cat-check"><div class="icon pass">✓</div><span>Open Redirect — No open redirect patterns detected in response headers.</span></div>
+</div>
+  </div></div>
+</section>
+
+<section id="findings">
+<div class="section-header">
+  <div class="section-num">04 — Detailed Findings</div>
+  <h2 class="section-title">Complete Analysis</h2>
+  <p class="section-subtitle">Click any finding to expand details and remediation</p>
+</div>
+
+<div class="finding open">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">SSL Certificate Validity</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ SSL certificate is valid and trusted.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">SSL Certificate Expiration</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ Certificate valid for 83 more days.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">TLS Protocol Version</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ Using TLSv1.3 (recommended).</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">HTTP Strict Transport Security</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ HSTS is enabled.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge critical">Critical</span>
+    <span class="finding-name">Content Security Policy</span>
+    <span class="finding-status fail">FAIL</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-grid">
+      <div>
+        <div class="finding-section">
+          <h4>Description</h4>
+          <p>The Content-Security-Policy header is not set. CSP is the most powerful browser-side defense against XSS attacks.</p>
+        </div>
+        <div class="finding-section">
+          <h4>Impact</h4>
+          <ul><li>Attackers can inject malicious scripts</li><li>No protection against inline script execution</li><li>Third-party resources loaded without restriction</li></ul>
+        </div>
+      </div>
+      <div>
+        <div class="finding-section">
+          <h4>Add CSP Header</h4>
+          <p>Add a Content-Security-Policy header via your web server or CDN.</p>
+          <pre>Content-Security-Policy: default-src &#x27;self&#x27;; script-src &#x27;self&#x27; &#x27;unsafe-inline&#x27;; style-src &#x27;self&#x27; &#x27;unsafe-inline&#x27;; img-src &#x27;self&#x27; data: https:; font-src &#x27;self&#x27; data:; connect-src &#x27;self&#x27; https:; frame-ancestors &#x27;none&#x27;;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">X-Frame-Options</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ X-Frame-Options is set.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">X-Content-Type-Options</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ X-Content-Type-Options is set.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">Referrer-Policy</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ Referrer-Policy is configured.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">Permissions-Policy</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ Permissions-Policy is configured.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">SPF Record</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ SPF record is configured.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">DMARC Record</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ DMARC record is configured.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">DKIM Record</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ DKIM record found (selector: resend).</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">Server Version Disclosure</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ Server header present but no version number disclosed.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">X-Powered-By Leak</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ X-Powered-By header is not exposed.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">Cookie Security</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ No cookies detected on the initial response.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">CMS Version Exposure</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ No common CMS (WordPress/Drupal/Joomla) version exposure detected.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">Mixed Content</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ No mixed content detected — all resources appear to load over HTTPS.</p>
+    </div>
+  </div>
+</div>
+<div class="finding">
+  <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="severity-badge pass-badge">Pass</span>
+    <span class="finding-name">Open Redirect</span>
+    <span class="finding-status pass">PASS</span>
+    <span class="chevron">›</span>
+  </div>
+  
+  <div class="finding-body">
+    <div class="finding-section">
+      <h4>Details</h4>
+      <p>✅ No open redirect patterns detected in response headers.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="action-plan">
+<div class="section-header">
+  <div class="section-num">05 — Priority Action Plan</div>
+  <h2 class="section-title">Recommended Fix Order</h2>
+</div>
+<div style="overflow-x:auto">
+<table class="action-table">
+<thead><tr><th>#</th><th>Action</th><th>Severity</th><th>Effort</th><th>Impact</th></tr></thead>
+<tbody>
+  <tr>
+    <td><div class="priority-num" style="background:#ff1744">1</div></td>
+    <td><strong style="color:#fff">Content Security Policy</strong><br><span style="color:var(--text2);font-size:13px">Add a Content-Security-Policy header via your web server or CDN.</span></td>
+    <td><span class="severity-badge critical" style="font-size:10px">Critical</span></td>
+    <td><span class="effort-tag">5-15 min</span></td>
+    <td style="color:var(--text2)">The Content-Security-Policy header is not set. CSP is the mo</td>
+  </tr></tbody>
+</table>
+</div>
+
+<div class="cta-box">
+  <h3>🎯 Need Help Fixing These Issues?</h3>
+  <p>Our security experts can implement all fixes for you — typically in under 24 hours.</p>
+  <a href="https://scoreforai.com/contact" class="cta-btn">Book a Free Consultation →</a>
+</div>
+
+<div class="cta-box" style="margin-top:16px;border-color:rgba(0,212,255,.2);background:linear-gradient(135deg,rgba(0,212,255,.05),rgba(0,212,255,.02))">
+  <h3>🔄 Re-scan After Fixing</h3>
+  <p>Verify your improvements with a fresh security scan.</p>
+  <a href="https://webseccheck.com" class="cta-btn" style="background:linear-gradient(135deg,#00d4ff,#0099cc)">Scan Again at WebSecCheck.com →</a>
+</div>
+</section>
+
+</main>
+
+<footer class="report-footer">
+<div class="container">
+  <div class="footer-brand">Web<span>Sec</span>Check</div>
+  <div class="footer-text">Generated on February 26, 2026 — 21:36 UTC — Report ID: WSC-2026-0226-24EB</div>
+  <div class="footer-disclaimer">This report reflects the security posture of scoreforai.com at the time of scanning. Security is an ongoing process. This report is confidential and intended solely for the domain owner.</div>
+</div>
+</footer>
+
+<div class="watermark">Generated by <span>WebSecCheck</span></div>
+
+</body>
+</html>
