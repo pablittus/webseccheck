@@ -35,7 +35,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,255,65,0.08)_0%,_transparent_60%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-14 pb-10 sm:pb-14 lg:pb-18 text-center">
           <div className="inline-flex items-center gap-2 bg-cyber-gray/50 border border-cyber-green/20 rounded-full px-4 py-1.5 mb-8">
             <span className="w-2 h-2 bg-cyber-green rounded-full animate-pulse" />
             <span className="text-xs text-gray-300 font-medium">Security Engine Online — OWASP Top 10 Framework</span>
