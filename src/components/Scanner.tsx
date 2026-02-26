@@ -74,7 +74,7 @@ export default function Scanner() {
   }
 
   const categories = result
-    ? [...new Set(result.checks.map(c => c.category))]
+    ? Array.from(new Set(result.checks.map(c => c.category)))
     : []
 
   return (
