@@ -79,10 +79,10 @@ export default function Scanner() {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
             </svg>
           </div>
@@ -92,13 +92,13 @@ export default function Scanner() {
             onChange={e => setUrl(e.target.value)}
             placeholder="Enter your website URL (e.g., example.com)"
             disabled={scanning}
-            className="w-full pl-12 pr-4 py-4 bg-cyber-gray border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green/50 focus:ring-1 focus:ring-cyber-green/30 transition-all text-sm disabled:opacity-50"
+            className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-cyber-gray border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green/50 focus:ring-1 focus:ring-cyber-green/30 transition-all text-sm disabled:opacity-50"
           />
         </div>
         <button
           type="submit"
           disabled={scanning}
-          className="gradient-cta text-black font-bold px-8 py-4 rounded-xl hover:opacity-90 transition-all glow-green text-sm whitespace-nowrap disabled:opacity-50"
+          className="gradient-cta text-black font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-xl hover:opacity-90 transition-all glow-green text-sm whitespace-nowrap disabled:opacity-50"
         >
           {scanning ? 'Scanning...' : 'Scan Now — Free'}
         </button>
@@ -106,42 +106,42 @@ export default function Scanner() {
 
       {/* Scanning animation */}
       {scanning && (
-        <div className="mt-6 p-6 rounded-xl bg-cyber-gray border border-cyber-green/20 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-5 h-5 border-2 border-cyber-green border-t-transparent rounded-full animate-spin" />
-            <span className="text-cyber-green font-semibold">Scanning {url}...</span>
+        <div className="mt-4 sm:mt-6 p-4 sm:p-6 rounded-xl bg-cyber-gray border border-cyber-green/20 text-center">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-cyber-green border-t-transparent rounded-full animate-spin" />
+            <span className="text-cyber-green font-semibold text-sm sm:text-base">Scanning {url}...</span>
           </div>
-          <p className="text-gray-400 text-sm">Running 16 security checks against OWASP Top 10</p>
+          <p className="text-gray-400 text-xs sm:text-sm">Running 16 security checks against OWASP Top 10</p>
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mt-6 p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-center">
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-center">
+          <p className="text-red-400 text-xs sm:text-sm">{error}</p>
         </div>
       )}
 
       {/* Results */}
       {result && (
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
           {/* Score header */}
-          <div className="p-6 rounded-xl bg-cyber-gray border border-cyber-green/20">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-4 sm:p-6 rounded-xl bg-cyber-gray border border-cyber-green/20">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div>
-                <p className="text-gray-400 text-xs mb-1">Security Score</p>
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-5xl font-black ${gradeColor[result.grade] || 'text-white'}`}>
+                <p className="text-gray-400 text-[10px] sm:text-xs mb-1">Security Score</p>
+                <div className="flex items-baseline gap-1 sm:gap-2">
+                  <span className={`text-3xl sm:text-5xl font-black ${gradeColor[result.grade] || 'text-white'}`}>
                     {result.score}
                   </span>
-                  <span className="text-gray-500 text-lg">/100</span>
-                  <span className={`text-3xl font-bold ml-2 ${gradeColor[result.grade] || 'text-white'}`}>
+                  <span className="text-gray-500 text-sm sm:text-lg">/100</span>
+                  <span className={`text-xl sm:text-3xl font-bold ml-1 sm:ml-2 ${gradeColor[result.grade] || 'text-white'}`}>
                     {result.grade}
                   </span>
                 </div>
               </div>
-              <div className="text-right text-sm text-gray-400">
-                <p>{result.url}</p>
+              <div className="text-right text-xs sm:text-sm text-gray-400">
+                <p className="truncate max-w-[120px] sm:max-w-none">{result.url}</p>
                 <p>{result.scan_time_seconds.toFixed(2)}s · {result.total_checks} checks</p>
               </div>
             </div>
@@ -158,10 +158,10 @@ export default function Scanner() {
             </div>
 
             {/* Summary pills */}
-            <div className="flex gap-4 mt-4">
-              <span className="text-green-400 text-sm font-medium">✓ {result.passed} passed</span>
-              <span className="text-yellow-400 text-sm font-medium">⚠ {result.warnings} warnings</span>
-              <span className="text-red-400 text-sm font-medium">✗ {result.failed} failed</span>
+            <div className="flex flex-wrap gap-2 sm:gap-4 mt-3 sm:mt-4">
+              <span className="text-green-400 text-xs sm:text-sm font-medium">✓ {result.passed} passed</span>
+              <span className="text-yellow-400 text-xs sm:text-sm font-medium">⚠ {result.warnings} warnings</span>
+              <span className="text-red-400 text-xs sm:text-sm font-medium">✗ {result.failed} failed</span>
             </div>
           </div>
 
@@ -190,12 +190,12 @@ export default function Scanner() {
           ))}
 
           {/* CTA for paid report */}
-          <div className="p-6 rounded-xl bg-gradient-to-r from-cyber-green/10 to-cyan-500/10 border border-cyber-green/20 text-center">
-            <h3 className="text-white font-bold text-lg mb-2">Want the full picture?</h3>
-            <p className="text-gray-400 text-sm mb-4">
+          <div className="p-4 sm:p-6 rounded-xl bg-gradient-to-r from-cyber-green/10 to-cyan-500/10 border border-cyber-green/20 text-center">
+            <h3 className="text-white font-bold text-base sm:text-lg mb-1 sm:mb-2">Want the full picture?</h3>
+            <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
               Get a detailed security report with 45+ checks, remediation steps, and priority action plan.
             </p>
-            <button className="gradient-cta text-black font-bold px-8 py-3 rounded-xl hover:opacity-90 transition-all text-sm">
+            <button className="gradient-cta text-black font-bold px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl hover:opacity-90 transition-all text-sm">
               Get Full Report — $49
             </button>
           </div>

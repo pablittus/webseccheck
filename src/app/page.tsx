@@ -62,24 +62,25 @@ export default function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,255,65,0.08)_0%,_transparent_60%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 lg:pt-14 pb-10 sm:pb-14 lg:pb-18 text-center">
-          <div className="inline-flex items-center gap-2 bg-cyber-gray/50 border border-cyber-green/20 rounded-full px-4 py-1.5 mb-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-16 pb-8 sm:pb-12 text-center">
+          <div className="inline-flex items-center gap-2 bg-cyber-gray/50 border border-cyber-green/20 rounded-full px-3 sm:px-4 py-1.5 mb-4 sm:mb-8">
             <span className="w-2 h-2 bg-cyber-green rounded-full animate-pulse" />
-            <span className="text-xs text-gray-300 font-medium">Security Engine Online — OWASP Top 10 Framework</span>
+            <span className="text-[10px] sm:text-xs text-gray-300 font-medium">Security Engine Online — OWASP Top 10 Framework</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-black text-white mb-4 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white mb-4 sm:mb-6 tracking-tight">
             How Secure Is<br />
             <span className="text-gradient">Your Website?</span>
           </h1>
-          <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto mb-6">
-            Run an instant security assessment against 45+ attack vectors. Get actionable results in seconds — no signup, no credit card.
+          <p className="text-base sm:text-xl text-gray-400 max-w-2xl mx-auto mb-4 sm:mb-6">
+            Run an instant security assessment against 45+ attack vectors.
+            <span className="hidden sm:inline"> Get actionable results in seconds — no signup, no credit card.</span>
           </p>
           <Scanner />
 
-          <div className="flex flex-wrap justify-center gap-8 mt-8">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-6 sm:mt-8">
             {trustSignals.map(s => (
-              <div key={s.label} className="flex items-center gap-2 text-gray-400 text-sm">
-                <span className="text-lg">{s.icon}</span>
+              <div key={s.label} className="flex items-center gap-1.5 sm:gap-2 text-gray-400 text-xs sm:text-sm">
+                <span className="text-base sm:text-lg">{s.icon}</span>
                 <span>{s.label}</span>
               </div>
             ))}
@@ -89,17 +90,19 @@ export default function Home() {
 
       {/* How It Works */}
       <section className="bg-cyber-blue/50 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-18">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">How It Works</h2>
-            <p className="text-gray-400 max-w-xl mx-auto">Three simple steps to comprehensive security insights.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+          <div className="text-center mb-6 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">How It Works</h2>
+            <p className="text-xs sm:text-base text-gray-400 max-w-xl mx-auto">Three simple steps to comprehensive security insights.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-3 gap-3 sm:gap-8">
             {steps.map(s => (
-              <div key={s.num} className="card-dark rounded-2xl p-6 text-center transition-all hover:scale-[1.02]">
-                <div className="text-4xl font-black text-cyber-green/20 mb-3">{s.num}</div>
-                <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
+              <div key={s.num} className="card-dark rounded-2xl p-3 sm:p-6 text-center transition-all hover:scale-[1.02]">
+                <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-cyber-green/10 border border-cyber-green/20 flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                  <span className="text-lg sm:text-2xl font-black text-cyber-green">{s.num}</span>
+                </div>
+                <h3 className="text-sm sm:text-lg font-bold text-white mb-1 sm:mb-2">{s.title}</h3>
+                <p className="hidden sm:block text-gray-400 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -108,17 +111,17 @@ export default function Home() {
 
       {/* What We Check */}
       <section>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-18">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">What We Check</h2>
-            <p className="text-gray-400 max-w-xl mx-auto">Comprehensive coverage across six critical security domains.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+          <div className="text-center mb-6 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">What We Check</h2>
+            <p className="text-xs sm:text-base text-gray-400 max-w-xl mx-auto">Comprehensive coverage across six critical security domains.</p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {categories.map(c => (
-              <div key={c.title} className="card-dark rounded-2xl p-6 transition-all hover:scale-[1.02]">
-                <div className="text-3xl mb-4">{c.icon}</div>
-                <h3 className="text-lg font-bold text-white mb-2">{c.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{c.desc}</p>
+              <div key={c.title} className="card-dark rounded-2xl p-4 sm:p-6 transition-all hover:scale-[1.02]">
+                <div className="text-2xl sm:text-3xl mb-2 sm:mb-4">{c.icon}</div>
+                <h3 className="text-base sm:text-lg font-bold text-white mb-1 sm:mb-2">{c.title}</h3>
+                <p className="hidden sm:block text-gray-400 text-sm leading-relaxed">{c.desc}</p>
               </div>
             ))}
           </div>
@@ -127,24 +130,24 @@ export default function Home() {
 
       {/* Testimonials */}
       <section className="bg-cyber-blue/50 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-18">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Trusted by Developers & Teams</h2>
-            <p className="text-gray-400 max-w-xl mx-auto">See what security-conscious professionals say about WebSecCheck.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+          <div className="text-center mb-6 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">Trusted by Developers & Teams</h2>
+            <p className="text-xs sm:text-base text-gray-400 max-w-xl mx-auto">See what security-conscious professionals say about WebSecCheck.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             {testimonials.map(t => (
-              <div key={t.name} className="relative card-dark rounded-2xl p-6 border border-white/5 hover:border-cyber-green/20 transition-all">
-                <span className="absolute top-4 right-5 text-5xl font-serif text-cyber-green/10 leading-none select-none">&ldquo;</span>
-                <div className="flex gap-0.5 mb-3">
+              <div key={t.name} className="relative card-dark rounded-2xl p-4 sm:p-6 border border-white/5 hover:border-cyber-green/20 transition-all">
+                <span className="absolute top-3 right-4 sm:top-4 sm:right-5 text-3xl sm:text-5xl font-serif text-cyber-green/10 leading-none select-none">&ldquo;</span>
+                <div className="flex gap-0.5 mb-2 sm:mb-3">
                   {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-cyber-green" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <svg key={i} className="w-3 h-3 sm:w-4 sm:h-4 text-cyber-green" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                   ))}
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed mb-4">{t.quote}</p>
+                <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 line-clamp-3 sm:line-clamp-none">{t.quote}</p>
                 <div>
-                  <span className="text-white font-semibold text-sm">{t.name}</span>
-                  <span className="text-gray-500 text-sm"> — {t.role}{t.company && `, ${t.company}`}</span>
+                  <span className="text-white font-semibold text-xs sm:text-sm">{t.name}</span>
+                  <span className="text-gray-500 text-xs sm:text-sm"> — {t.role}{t.company && `, ${t.company}`}</span>
                 </div>
               </div>
             ))}
@@ -154,12 +157,12 @@ export default function Home() {
 
       {/* Stats */}
       <section className="bg-cyber-blue/50 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
             {stats.map(s => (
               <div key={s.label} className="text-center">
-                <div className="text-4xl sm:text-5xl font-black text-gradient mb-2">{s.value}</div>
-                <div className="text-gray-400 text-sm">{s.label}</div>
+                <div className="text-2xl sm:text-4xl md:text-5xl font-black text-gradient mb-1 sm:mb-2">{s.value}</div>
+                <div className="text-gray-400 text-xs sm:text-base">{s.label}</div>
               </div>
             ))}
           </div>
@@ -168,14 +171,14 @@ export default function Home() {
 
       {/* CTA */}
       <section>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-18 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Ready to Secure Your Website?</h2>
-          <p className="text-gray-400 max-w-xl mx-auto mb-8">Start with a free scan. Get enterprise-grade security insights in seconds.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/" className="gradient-cta text-black font-bold px-8 py-4 rounded-xl hover:opacity-90 transition glow-green text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">Ready to Secure Your Website?</h2>
+          <p className="text-xs sm:text-base text-gray-400 max-w-xl mx-auto mb-6 sm:mb-8">Start with a free scan. Get enterprise-grade security insights in seconds.</p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Link href="/" className="gradient-cta text-black font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-xl hover:opacity-90 transition glow-green text-sm">
               Start Free Scan
             </Link>
-            <Link href="/pricing" className="border border-white/10 text-white font-semibold px-8 py-4 rounded-xl hover:border-cyber-green/30 transition text-sm">
+            <Link href="/pricing" className="border border-white/10 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl hover:border-cyber-green/30 transition text-sm">
               View Pricing
             </Link>
           </div>
