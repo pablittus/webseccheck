@@ -12,8 +12,8 @@ from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
 
-from checks import ssl_tls, http_headers, dns_records, server_exposure, cookies, cms_detection
-from report_generator import generate_pdf, mixed_content, redirects
+from checks import ssl_tls, http_headers, dns_records, server_exposure, cookies, cms_detection, mixed_content, redirects
+from report_generator import generate_pdf
 
 app = FastAPI(
     title="WebSecCheck API",
