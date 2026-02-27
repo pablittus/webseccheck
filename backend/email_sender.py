@@ -86,3 +86,59 @@ def send_report_email(to_email: str, token: str, hostname: str, score: int, grad
     except Exception as e:
         print(f"Email send error: {e}")
         return False
+
+
+def send_scan_alert(hostname: str, score: int, grade: str, ip_address: str = "") -> bool:
+    """Send scan alert to admin when a new scan is performed."""
+    ALERT_EMAIL = os.environ.get("ALERT_EMAIL", "pablo.sonder@gmail.com")
+    grade_color = {"A": "#00ff88", "B": "#00cc33", "C": "#ffd600", "D": "#ff9800", "F": "#ff4444"}.get(grade, "#fff")
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Segoe UI',system-ui,sans-serif;">
+<div style="max-width:500px;margin:0 auto;padding:30px 20px;">
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="font-size:22px;font-weight:700;color:#fff;">🛡️ Web<span style="color:#00FF41;">Sec</span>Check</div>
+    <div style="font-size:11px;color:#888;letter-spacing:2px;margin-top:4px;">NEW SCAN ALERT</div>
+  </div>
+  <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:24px;">
+    <p style="color:#aaa;font-size:14px;margin:0 0 16px;">Nuevo scan solicitado:</p>
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;text-align:center;flex:1;">
+        <div style="font-size:14px;font-weight:600;color:#fff;">{hostname}</div>
+        <div style="font-size:10px;color:#888;margin-top:4px;">DOMINIO</div>
+      </div>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;text-align:center;flex:1;">
+        <div style="font-size:24px;font-weight:800;color:{grade_color};">{score} ({grade})</div>
+        <div style="font-size:10px;color:#888;margin-top:4px;">SCORE</div>
+      </div>
+    </div>
+    {f'<p style="color:#666;font-size:12px;margin:0;">IP: {ip_address}</p>' if ip_address else ''}
+    <div style="text-align:center;margin-top:16px;">
+      <a href="https://api.webseccheck.com/admin" style="color:#00FF41;font-weight:600;text-decoration:none;font-size:13px;">Ver panel admin →</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>"""
+
+    try:
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": FROM_EMAIL,
+                "to": [ALERT_EMAIL],
+                "subject": f"🔔 Nuevo scan: {hostname} — {score}/100 ({grade})",
+                "html": html,
+            },
+            timeout=10,
+        )
+        return resp.status_code == 200
+    except Exception as e:
+        print(f"Scan alert email error: {e}")
+        return False

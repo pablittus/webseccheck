@@ -15,7 +15,7 @@ from pydantic import BaseModel, field_validator
 from checks import ssl_tls, http_headers, dns_records, server_exposure, cookies, cms_detection, mixed_content, redirects
 from report_generator import generate_pdf
 from token_manager import generate_token, validate_token
-from email_sender import send_report_email
+from email_sender import send_report_email, send_scan_alert
 from report_html import generate_report_html
 import os
 from fastapi import Request, Depends
@@ -229,6 +229,9 @@ async def scan(request: ScanRequest, raw_request: Request = None):
             ip = raw_request.headers.get("x-forwarded-for", raw_request.client.host if raw_request.client else "")
             ua = raw_request.headers.get("user-agent", "")
         scan_id = db.save_scan(result.model_dump(), ip, ua)
+        # Send scan alert email in background
+        import threading
+        threading.Thread(target=send_scan_alert, args=(hostname, score, score_to_grade(score), ip), daemon=True).start()
         if raw_request:
             raw_request.state.last_scan_id = scan_id
     except Exception:
