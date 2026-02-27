@@ -22,7 +22,7 @@ interface ScanResult {
   failed: number
 }
 
-const API_URL = 'https://pablittus-webseccheck.hf.space'
+const API_URL = 'https://api.webseccheck.com'
 
 const gradeColor: Record<string, string> = {
   'A': 'text-green-400',
