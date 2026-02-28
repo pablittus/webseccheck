@@ -5,7 +5,7 @@ import requests
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "re_GC795Zim_B6GKbogAqYZNTfpXPAj9JGUF")
 FROM_EMAIL = "WebSecCheck <hello@scoreforai.com>"
-BASE_URL = os.environ.get("BASE_URL", "https://pablittus-webseccheck.hf.space")
+BASE_URL = os.environ.get("BASE_URL", "https://api.webseccheck.com")
 
 
 def send_report_email(to_email: str, token: str, hostname: str, score: int, grade: str) -> bool:
