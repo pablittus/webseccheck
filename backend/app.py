@@ -21,6 +21,7 @@ import os
 from fastapi import Request, Depends
 
 import db
+from rate_limiter import limiter
 
 
 app = FastAPI(
@@ -49,6 +50,35 @@ def verify_admin(request: Request):
     if not ADMIN_KEY or key != ADMIN_KEY:
         raise HTTPException(status_code=403, detail="Forbidden")
 
+
+def get_client_ip(request: Request) -> str:
+    """Get client IP from X-Forwarded-For or direct connection."""
+    if request:
+        xff = request.headers.get("x-forwarded-for", "")
+        if xff:
+            return xff.split(",")[0].strip()
+        if request.client:
+            return request.client.host
+    return ""
+
+
+def check_rate_limit(request: Request, endpoint: str, max_per_minute: int, max_per_hour: int):
+    """Check rate limit and raise 429 if exceeded. Returns rate limit info dict."""
+    ip = get_client_ip(request)
+    result = limiter.check(ip, endpoint, max_per_minute, max_per_hour)
+    if not result["allowed"]:
+        from fastapi.responses import JSONResponse
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded. Please try again later.",
+            headers={
+                "Retry-After": str(result["retry_after"]),
+                "X-RateLimit-Limit": str(result["limit"]),
+                "X-RateLimit-Remaining": str(result["remaining"]),
+                "X-RateLimit-Reset": str(result["reset"]),
+            },
+        )
+    return result
 
 
 @app.get("/report/{token}", response_class=HTMLResponse)
@@ -156,6 +186,8 @@ async def fetch_site(url: str) -> tuple[dict, list, str]:
 
 @app.post("/scan", response_model=ScanResponse)
 async def scan(request: ScanRequest, raw_request: Request = None):
+    if raw_request:
+        rl = check_rate_limit(raw_request, "scan", max_per_minute=3, max_per_hour=10)
     start = time.time()
     url = request.url
     parsed = urlparse(url)
@@ -266,6 +298,8 @@ class ReportRequest(BaseModel):
 @app.post("/report")
 async def report(request: ReportRequest, raw_request: Request = None):
     """Run a scan, generate token, and email the report link."""
+    if raw_request:
+        check_rate_limit(raw_request, "report", max_per_minute=2, max_per_hour=5)
     if not request.email:
         raise HTTPException(status_code=400, detail="Email is required to receive the report.")
 
@@ -378,6 +412,8 @@ class ContactRequest(BaseModel):
 @app.post("/contact")
 async def contact(request: ContactRequest, raw_request: Request = None):
     """Handle contact form with Turnstile verification."""
+    if raw_request:
+        check_rate_limit(raw_request, "contact", max_per_minute=1, max_per_hour=3)
     import requests as req
     # Verify Turnstile token
     TURNSTILE_SECRET = os.environ.get("TURNSTILE_SECRET", "0x4AAAAAACjW7E94djEA1arV0WKbLRul2nE")
@@ -454,8 +490,10 @@ class CheckoutRequest(BaseModel):
 
 
 @app.post("/checkout")
-async def checkout(request: CheckoutRequest):
+async def checkout(request: CheckoutRequest, raw_request: Request = None):
     """Create a Mercado Pago checkout preference and return the payment URL."""
+    if raw_request:
+        check_rate_limit(raw_request, "checkout", max_per_minute=2, max_per_hour=5)
     if not MP_ACCESS_TOKEN:
         raise HTTPException(status_code=500, detail="Payment system not configured")
     if not request.email:
@@ -534,8 +572,10 @@ class PentestCheckoutRequest(BaseModel):
 
 
 @app.post("/checkout/pentest")
-async def checkout_pentest(request: PentestCheckoutRequest):
+async def checkout_pentest(request: PentestCheckoutRequest, raw_request: Request = None):
     """Create a Mercado Pago checkout preference for Premium Pentest ($499)."""
+    if raw_request:
+        check_rate_limit(raw_request, "checkout", max_per_minute=2, max_per_hour=5)
     if not MP_ACCESS_TOKEN:
         raise HTTPException(status_code=500, detail="Payment system not configured")
     if not request.email:
