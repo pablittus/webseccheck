@@ -3,7 +3,7 @@
 import os
 import requests
 
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "re_GC795Zim_B6GKbogAqYZNTfpXPAj9JGUF")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "re_3QHUid5g_KCUsAYBw87aWAjCfZXzsCSXg")
 FROM_EMAIL = "WebSecCheck <hello@scoreforai.com>"
 BASE_URL = os.environ.get("BASE_URL", "https://api.webseccheck.com")
 
