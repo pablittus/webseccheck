@@ -232,3 +232,84 @@ def get_pentest_by_ext_ref(external_reference: str):
     conn = get_conn()
     row = conn.execute("SELECT * FROM pentest_requests WHERE external_reference = ?", (external_reference,)).fetchone()
     return dict(row) if row else None
+
+
+# ---- Analytics ----
+
+def init_page_views_table():
+    conn = get_conn()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS page_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT NOT NULL,
+            referrer TEXT DEFAULT '',
+            user_agent TEXT DEFAULT '',
+            ip_address TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_pv_created ON page_views(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_pv_path ON page_views(path);
+    """)
+    conn.commit()
+
+
+def save_page_view(path: str, referrer: str = "", user_agent: str = "", ip_address: str = ""):
+    conn = get_conn()
+    conn.execute(
+        "INSERT INTO page_views (path, referrer, user_agent, ip_address) VALUES (?, ?, ?, ?)",
+        (path, referrer[:500], user_agent[:500], ip_address),
+    )
+    conn.commit()
+
+
+def get_analytics_overview():
+    conn = get_conn()
+    today = conn.execute("SELECT COUNT(*) FROM page_views WHERE date(created_at) = date('now')").fetchone()[0]
+    week = conn.execute("SELECT COUNT(*) FROM page_views WHERE created_at >= datetime('now', '-7 days')").fetchone()[0]
+    month = conn.execute("SELECT COUNT(*) FROM page_views WHERE created_at >= datetime('now', '-30 days')").fetchone()[0]
+    total = conn.execute("SELECT COUNT(*) FROM page_views").fetchone()[0]
+    unique_today = conn.execute("SELECT COUNT(DISTINCT ip_address) FROM page_views WHERE date(created_at) = date('now')").fetchone()[0]
+    unique_week = conn.execute("SELECT COUNT(DISTINCT ip_address) FROM page_views WHERE created_at >= datetime('now', '-7 days')").fetchone()[0]
+    unique_month = conn.execute("SELECT COUNT(DISTINCT ip_address) FROM page_views WHERE created_at >= datetime('now', '-30 days')").fetchone()[0]
+    views_per_day = [dict(r) for r in conn.execute(
+        "SELECT date(created_at) as day, COUNT(*) as views, COUNT(DISTINCT ip_address) as unique_visitors FROM page_views WHERE created_at >= datetime('now', '-30 days') GROUP BY date(created_at) ORDER BY day"
+    ).fetchall()]
+    top_pages = [dict(r) for r in conn.execute(
+        "SELECT path, COUNT(*) as views FROM page_views WHERE created_at >= datetime('now', '-30 days') GROUP BY path ORDER BY views DESC LIMIT 15"
+    ).fetchall()]
+    top_referrers = [dict(r) for r in conn.execute(
+        "SELECT referrer, COUNT(*) as views FROM page_views WHERE referrer != '' AND created_at >= datetime('now', '-30 days') GROUP BY referrer ORDER BY views DESC LIMIT 15"
+    ).fetchall()]
+    return {
+        "views_today": today, "views_week": week, "views_month": month, "views_total": total,
+        "unique_today": unique_today, "unique_week": unique_week, "unique_month": unique_month,
+        "views_per_day": views_per_day, "top_pages": top_pages, "top_referrers": top_referrers,
+    }
+
+
+def get_analytics_scans():
+    conn = get_conn()
+    scans_per_day = [dict(r) for r in conn.execute(
+        "SELECT date(created_at) as day, COUNT(*) as count FROM scans WHERE created_at >= datetime('now', '-30 days') GROUP BY date(created_at) ORDER BY day"
+    ).fetchall()]
+    top_domains = [dict(r) for r in conn.execute(
+        "SELECT hostname, COUNT(*) as count FROM scans WHERE created_at >= datetime('now', '-30 days') GROUP BY hostname ORDER BY count DESC LIMIT 20"
+    ).fetchall()]
+    total_30d = conn.execute("SELECT COUNT(*) FROM scans WHERE created_at >= datetime('now', '-30 days')").fetchone()[0]
+    return {"scans_per_day": scans_per_day, "top_domains": top_domains, "total_30d": total_30d}
+
+
+def get_analytics_conversions():
+    conn = get_conn()
+    total_scans = conn.execute("SELECT COUNT(*) FROM scans").fetchone()[0]
+    total_reports = conn.execute("SELECT COUNT(*) FROM reports").fetchone()[0]
+    total_pentests = conn.execute("SELECT COUNT(*) FROM pentest_requests").fetchone()[0]
+    paid_reports = conn.execute("SELECT COUNT(*) FROM payments WHERE status = 'approved'").fetchone()[0]
+    paid_pentests = conn.execute("SELECT COUNT(*) FROM pentest_requests WHERE payment_status = 'approved'").fetchone()[0]
+    report_rate = round((total_reports / total_scans * 100), 1) if total_scans > 0 else 0
+    paid_rate = round((paid_reports / total_scans * 100), 1) if total_scans > 0 else 0
+    return {
+        "total_scans": total_scans, "total_reports": total_reports, "total_pentests": total_pentests,
+        "paid_reports": paid_reports, "paid_pentests": paid_pentests,
+        "report_conversion_rate": report_rate, "paid_conversion_rate": paid_rate,
+    }

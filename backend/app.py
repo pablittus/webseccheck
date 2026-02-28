@@ -41,6 +41,7 @@ app.add_middleware(
 # Initialize database
 db.init_db()
 db.init_pentest_table()
+db.init_page_views_table()
 
 ADMIN_KEY = os.environ.get("ADMIN_API_KEY", "")
 
@@ -847,3 +848,72 @@ async def webhook_mercadopago(raw_request: Request):
                 threading.Thread(target=_generate_and_send, args=(email, url), daemon=True).start()
 
     return {"status": "ok"}
+
+
+# ---- Page View Tracking ----
+
+class TrackRequest(BaseModel):
+    path: str
+    referrer: str = ""
+
+
+# Rate limiter for tracking: simple in-memory
+_track_counts: dict = {}
+_track_window = 60  # seconds
+
+
+@app.post("/track", status_code=204)
+async def track_page_view(request: TrackRequest, raw_request: Request = None):
+    """Lightweight page view tracking endpoint."""
+    ip = get_client_ip(raw_request) if raw_request else ""
+    
+    # Simple rate limit: 50/min per IP
+    import time as _time
+    now = _time.time()
+    key = ip
+    if key in _track_counts:
+        ts, count = _track_counts[key]
+        if now - ts < _track_window:
+            if count >= 50:
+                return Response(status_code=204)
+            _track_counts[key] = (ts, count + 1)
+        else:
+            _track_counts[key] = (now, 1)
+    else:
+        _track_counts[key] = (now, 1)
+    
+    # Clean old entries periodically
+    if len(_track_counts) > 10000:
+        cutoff = now - _track_window
+        _track_counts.clear()
+    
+    ua = raw_request.headers.get("user-agent", "") if raw_request else ""
+    
+    try:
+        db.save_page_view(
+            path=request.path[:200],
+            referrer=request.referrer,
+            user_agent=ua,
+            ip_address=ip,
+        )
+    except Exception:
+        pass
+    
+    return Response(status_code=204)
+
+
+# ---- Analytics API ----
+
+@app.get("/admin/analytics/overview")
+async def analytics_overview(_=Depends(verify_admin)):
+    return db.get_analytics_overview()
+
+
+@app.get("/admin/analytics/scans")
+async def analytics_scans(_=Depends(verify_admin)):
+    return db.get_analytics_scans()
+
+
+@app.get("/admin/analytics/conversions")
+async def analytics_conversions(_=Depends(verify_admin)):
+    return db.get_analytics_conversions()
