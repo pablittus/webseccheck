@@ -105,31 +105,7 @@ export default function Scanner() {
     }
   }
 
-  const handleOrderReport = async () => {
-    if (!email.trim() || !url.trim()) {
-      setError('Please enter your email address to receive the report.')
-      return
-    }
-    setOrdering(true)
-    setError('')
-    try {
-      const res = await fetch(`${API_URL}/report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), email: email.trim() }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: 'Failed to generate report' }))
-        throw new Error(err.detail || 'Failed to generate report')
-      }
-      const data = await res.json()
-      setReportStatus({ sent: true, email: email.trim(), grade: data.grade, score: data.score })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred.')
-    } finally {
-      setOrdering(false)
-    }
-  }
+const handleOrderReport = async () => {    if (!email.trim() || !url.trim()) {      setError('Please enter your email address to receive the report.')      return    }    setOrdering(true)    setError('')    try {      const res = await fetch(`${API_URL}/checkout`, {        method: 'POST',        headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({ url: url.trim(), email: email.trim() }),      })      if (!res.ok) {        const err = await res.json().catch(() => ({ detail: 'Failed to create checkout' }))        throw new Error(err.detail || 'Failed to create checkout')      }      const data = await res.json()      if (data.init_point) {        window.location.href = data.init_point      } else {        throw new Error('No payment URL received')      }    } catch (err) {      setError(err instanceof Error ? err.message : 'An error occurred.')    } finally {      setOrdering(false)    }  }
 
   // Split checks into free and hidden
   const freeChecks = result ? result.checks.filter(c => FREE_CHECK_IDS.includes(c.id)) : []
@@ -345,7 +321,7 @@ export default function Scanner() {
                     disabled={ordering}
                     className="gradient-cta text-black font-bold px-6 py-2.5 rounded-xl hover:opacity-90 transition-all glow-green text-sm whitespace-nowrap disabled:opacity-50"
                   >
-                    {ordering ? 'Generating...' : 'Get Full Report — $49'}
+                    {ordering ? 'Redirecting to payment...' : 'Get Full Report — $49'}
                   </button>
                 </div>
                 <p className="text-gray-500 text-[10px]">

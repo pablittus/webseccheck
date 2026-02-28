@@ -136,3 +136,48 @@ def get_stats():
         "scans_per_day": scans_per_day,
         "top_domains": top_domains,
     }
+
+
+def init_payments_table():
+    conn = get_conn()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            payment_id TEXT,
+            status TEXT,
+            email TEXT,
+            url TEXT,
+            external_reference TEXT,
+            amount REAL,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_payments_ext_ref ON payments(external_reference);
+        CREATE INDEX IF NOT EXISTS idx_payments_payment_id ON payments(payment_id);
+    """)
+    conn.commit()
+
+
+def save_payment(payment_id: str, status: str, email: str, url: str, external_reference: str, amount: float = 0) -> int:
+    conn = get_conn()
+    cur = conn.execute(
+        "INSERT INTO payments (payment_id, status, email, url, external_reference, amount) VALUES (?, ?, ?, ?, ?, ?)",
+        (payment_id, status, email, url, external_reference, amount),
+    )
+    conn.commit()
+    return cur.lastrowid
+
+
+def update_payment_status(payment_id: str, status: str):
+    conn = get_conn()
+    conn.execute(
+        "UPDATE payments SET status = ?, updated_at = datetime('now') WHERE payment_id = ?",
+        (status, payment_id),
+    )
+    conn.commit()
+
+
+def get_payment_by_ext_ref(external_reference: str):
+    conn = get_conn()
+    row = conn.execute("SELECT * FROM payments WHERE external_reference = ?", (external_reference,)).fetchone()
+    return dict(row) if row else None

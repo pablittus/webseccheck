@@ -417,3 +417,197 @@ async def contact(request: ContactRequest, raw_request: Request = None):
         print(f"Contact email error: {e}")
     
     return {"status": "success", "message": "Message received. We'll get back to you within 24 hours."}
+
+
+# ---- Mercado Pago Integration ----
+
+import uuid
+import requests as sync_requests
+
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "")
+
+# Initialize payments table
+db.init_payments_table()
+
+
+class CheckoutRequest(BaseModel):
+    url: str
+    email: str
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        v = v.strip()
+        if not v.startswith(("http://", "https://")):
+            v = f"https://{v}"
+        parsed = urlparse(v)
+        if not parsed.hostname:
+            raise ValueError("Invalid URL")
+        return v
+
+
+@app.post("/checkout")
+async def checkout(request: CheckoutRequest):
+    """Create a Mercado Pago checkout preference and return the payment URL."""
+    if not MP_ACCESS_TOKEN:
+        raise HTTPException(status_code=500, detail="Payment system not configured")
+    if not request.email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    external_reference = f"{request.email}|||{request.url}|||{uuid.uuid4().hex[:8]}"
+
+    preference = {
+        "items": [
+            {
+                "title": "WebSecCheck Security Report",
+                "quantity": 1,
+                "unit_price": 49,
+                "currency_id": "USD",
+            }
+        ],
+        "payer": {"email": request.email},
+        "back_urls": {
+            "success": "https://webseccheck.com/report/success",
+            "failure": "https://webseccheck.com/report/failure",
+            "pending": "https://webseccheck.com/report/pending",
+        },
+        "auto_return": "approved",
+        "notification_url": "https://api.webseccheck.com/webhook/mercadopago",
+        "external_reference": external_reference,
+    }
+
+    try:
+        resp = sync_requests.post(
+            "https://api.mercadopago.com/checkout/preferences",
+            json=preference,
+            headers={
+                "Authorization": f"Bearer {MP_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        print(f"MP preference error: {e}")
+        raise HTTPException(status_code=502, detail="Could not create payment preference")
+
+    # Save pending payment
+    try:
+        db.save_payment(
+            payment_id="",
+            status="pending",
+            email=request.email,
+            url=request.url,
+            external_reference=external_reference,
+            amount=49,
+        )
+    except Exception as e:
+        print(f"DB save payment error: {e}")
+
+    return {"init_point": data.get("init_point"), "preference_id": data.get("id")}
+
+
+@app.post("/webhook/mercadopago")
+async def webhook_mercadopago(raw_request: Request):
+    """Handle Mercado Pago IPN notifications."""
+    try:
+        body = await raw_request.json()
+    except Exception:
+        return {"status": "ok"}
+
+    print(f"MP webhook received: {body}")
+
+    # MP sends topic=payment with data.id = payment_id
+    topic = body.get("topic") or body.get("type", "")
+    
+    if topic in ("payment", "payment.created", "payment.updated"):
+        payment_id = None
+        if "data" in body and "id" in body["data"]:
+            payment_id = str(body["data"]["id"])
+        elif "resource" in body:
+            # Extract ID from resource URL
+            payment_id = body["resource"].split("/")[-1]
+        
+        if not payment_id:
+            return {"status": "ok"}
+
+        # Fetch payment details from MP
+        try:
+            resp = sync_requests.get(
+                f"https://api.mercadopago.com/v1/payments/{payment_id}",
+                headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            payment_data = resp.json()
+        except Exception as e:
+            print(f"MP fetch payment error: {e}")
+            return {"status": "error"}
+
+        status = payment_data.get("status", "")
+        external_reference = payment_data.get("external_reference", "")
+        amount = payment_data.get("transaction_amount", 0)
+
+        print(f"MP payment {payment_id}: status={status}, ref={external_reference}")
+
+        # Update or save payment in DB
+        try:
+            existing = db.get_payment_by_ext_ref(external_reference)
+            if existing:
+                db.update_payment_status(payment_id, status)
+                # Also update payment_id if it was empty
+                conn = db.get_conn()
+                conn.execute(
+                    "UPDATE payments SET payment_id = ? WHERE external_reference = ?",
+                    (payment_id, external_reference),
+                )
+                conn.commit()
+            else:
+                # Parse email and url from external_reference
+                parts = external_reference.split("|||")
+                email = parts[0] if len(parts) > 0 else ""
+                url = parts[1] if len(parts) > 1 else ""
+                db.save_payment(payment_id, status, email, url, external_reference, amount)
+        except Exception as e:
+            print(f"DB payment update error: {e}")
+
+        # If approved, generate and send report
+        if status == "approved" and external_reference:
+            parts = external_reference.split("|||")
+            if len(parts) >= 2:
+                email = parts[0]
+                url = parts[1]
+                # Generate report in background thread
+                import threading
+
+                def _generate_and_send(email: str, url: str):
+                    try:
+                        import asyncio
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        
+                        scan_req = ScanRequest(url=url)
+                        scan_result = loop.run_until_complete(scan(scan_req))
+                        scan_dict = scan_result.model_dump()
+                        
+                        from token_manager import generate_token
+                        token = generate_token(email, scan_dict)
+                        
+                        send_report_email(
+                            to_email=email,
+                            token=token,
+                            hostname=scan_dict["hostname"],
+                            score=scan_dict["score"],
+                            grade=scan_dict["grade"],
+                        )
+                        print(f"Report sent to {email} for {url}")
+                        
+                        # Save report record
+                        db.save_report(0, email, token)
+                    except Exception as e:
+                        print(f"Report generation error for {email}: {e}")
+
+                threading.Thread(target=_generate_and_send, args=(email, url), daemon=True).start()
+
+    return {"status": "ok"}
